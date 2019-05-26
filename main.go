@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math"
 )
 
 // hexto64 re-encodes the passed in hexString and returns it as a base64 encoding.
@@ -34,6 +35,51 @@ func FixedXOR(hstr1, hstr2 string) string {
 	return hex.EncodeToString(XORValue)
 }
 
+var englishModel = []float64{
+	0.0651738, 0.0124248, 0.0217339, 0.0349835, //'A', 'B', 'C', 'D',...
+	0.1041442, 0.0197881, 0.0158610, 0.0492888,
+	0.0558094, 0.0009033, 0.0050529, 0.0331490,
+	0.0202124, 0.0564513, 0.0596302, 0.0137645,
+	0.0008606, 0.0497563, 0.0515760, 0.0729357,
+	0.0225134, 0.0082903, 0.0171272, 0.0013692,
+	0.0145984, 0.0007836, 0.1918182}
+
+const (
+	captialStart = 0x61
+	captialEnd   = 0x7a
+	lowerStart   = 0x41
+	lowerEnd     = 0x5a
+)
+
+// manhatanDistance finds the manhatan distance between vector1 and vector2.
+func manhatanDistance(vector1, vector2 []float64) float64 {
+	dist := 0.0
+	for i := range vector1 {
+		dist += math.Abs(vector1[i] - vector2[i])
+	}
+	return dist
+}
+
+// plaintextscore finds the manhatan distance between text and the english model.
+func plaintextScore(text string) float64 {
+	stringVector := make([]float64, len(englishModel))
+	for i := range text {
+		hex := byte(text[i])
+		if hex >= captialStart && hex <= captialEnd {
+			stringVector[int(hex-captialStart)]++
+		} else if hex >= lowerStart && hex <= lowerEnd {
+			stringVector[int(hex-lowerStart)]++
+		}
+	}
+
+	plaintextSize := len(text)
+	for i := range stringVector {
+		stringVector[i] /= float64(plaintextSize)
+	}
+
+	return manhatanDistance(stringVector, englishModel)
+}
+
 // Frequency attack against a single charecter XOR.
 func singleByteXOR(hexcipher string) string {
 	byteStream, err := hex.DecodeString(hexcipher)
@@ -43,6 +89,7 @@ func singleByteXOR(hexcipher string) string {
 
 	// Our current best guess as to the plaintext.
 	plaintext := string(byteStream)
+	bestScore := plaintextScore(plaintext)
 
 	// We will take the L2 Norm between charecter frequence of english language and set given.
 	XORValue := make([]byte, len(byteStream))
@@ -50,10 +97,16 @@ func singleByteXOR(hexcipher string) string {
 		for i := range byteStream {
 			XORValue[i] = byteStream[i] ^ byte(j+0x1)
 		}
-		potentialValue := string(XORValue)
+		guess := string(XORValue)
+		score := plaintextScore(guess)
+		fmt.Printf("The Guess: %s, has score %f\n", guess, score)
+		if score < bestScore {
+			plaintext = guess
+			bestScore = score
+		}
 	}
 
-	return string(byteStream)
+	return plaintext
 }
 
 func main() {
@@ -79,6 +132,6 @@ func main() {
 	S1C3Answer := "Cooking MC's like a pound of bacon"
 	S1C3Result := singleByteXOR(S1C3Input)
 	if S1C3Result != S1C3Answer {
-		fmt.Printf(S1C1Result)
+		fmt.Printf(S1C3Result)
 	}
 }
