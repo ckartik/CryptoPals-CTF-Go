@@ -34,13 +34,26 @@ func FixedXOR(hstr1, hstr2 string) string {
 	return hex.EncodeToString(XORValue)
 }
 
-func singleByteXOR(hexString string) string {
-	byteStream, err := hex.DecodeString(hexString)
+// Frequency attack against a single charecter XOR.
+func singleByteXOR(hexcipher string) string {
+	byteStream, err := hex.DecodeString(hexcipher)
 	if err != nil {
 		panic("There was an issue decoding the string")
 	}
 
-	return hex.EncodeToString(byteStream)
+	// Our current best guess as to the plaintext.
+	plaintext := string(byteStream)
+
+	// We will take the L2 Norm between charecter frequence of english language and set given.
+	XORValue := make([]byte, len(byteStream))
+	for j := 0x0; j < 0xff; j++ { // Keep top scorer only, otherwise too memory expensive.
+		for i := range byteStream {
+			XORValue[i] = byteStream[i] ^ byte(j+0x1)
+		}
+		potentialValue := string(XORValue)
+	}
+
+	return string(byteStream)
 }
 
 func main() {
@@ -59,5 +72,13 @@ func main() {
 	S1C2Result := FixedXOR(S1C2Input, S1C2Input2)
 	if S1C2Result != S1C2Answer {
 		fmt.Printf(S1C2Result)
+	}
+
+	// Local Test of S1C1
+	S1C3Input := "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
+	S1C3Answer := "Cooking MC's like a pound of bacon"
+	S1C3Result := singleByteXOR(S1C3Input)
+	if S1C3Result != S1C3Answer {
+		fmt.Printf(S1C1Result)
 	}
 }
