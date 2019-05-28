@@ -51,7 +51,9 @@ const (
 	lowerEnd     = 0x5a
 )
 
-// manhatanDistance finds the manhatan distance between vector1 and vector2.
+// pnorm find the norm with pvalue p of the difference between vector1 and vector2.
+// p=0.5 is the most effective because similarty on a few features is a strong
+// inidicator of similarty between the enlgish model and the small piece of text.
 func pnorm(vector1, vector2 []float64, p float64) float64 {
 	dist := 0.0
 	for i := range vector1 {
