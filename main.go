@@ -52,12 +52,12 @@ const (
 )
 
 // manhatanDistance finds the manhatan distance between vector1 and vector2.
-func manhatanDistance(vector1, vector2 []float64) float64 {
+func pnorm(vector1, vector2 []float64, p float64) float64 {
 	dist := 0.0
 	for i := range vector1 {
-		dist += math.Abs(vector1[i] - vector2[i])
+		dist += math.Pow(math.Abs(vector1[i]-vector2[i]), p)
 	}
-	return dist
+	return math.Pow(dist, 1/p)
 }
 
 // plaintextscore finds the manhatan distance between text and the english model.
@@ -77,7 +77,7 @@ func plaintextScore(text string) float64 {
 		stringVector[i] /= float64(plaintextSize)
 	}
 
-	return manhatanDistance(stringVector, englishModel)
+	return pnorm(stringVector, englishModel, .5)
 }
 
 // Frequency attack against a single charecter XOR.
@@ -99,7 +99,6 @@ func singleByteXOR(hexcipher string) string {
 		}
 		guess := string(XORValue)
 		score := plaintextScore(guess)
-		fmt.Printf("The Guess: %s, has score %f\n", guess, score)
 		if score < bestScore {
 			plaintext = guess
 			bestScore = score
