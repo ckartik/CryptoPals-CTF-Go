@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"math"
+	"os"
 )
 
 // hexto64 re-encodes the passed in hexString and returns it as a base64 encoding.
@@ -59,27 +61,34 @@ func pnorm(vector1, vector2 []float64, p float64) float64 {
 	for i := range vector1 {
 		dist += math.Pow(math.Abs(vector1[i]-vector2[i]), p)
 	}
+
 	return math.Pow(dist, 1/p)
 }
 
 // plaintextscore finds the manhatan distance between text and the english model.
+// Our formula finds the p = 0.5 norm of the difference between the english model and the normailzed count of each letter.
+// It also adds a lambda weight factor to penalize the occurence of non-english output.
 func plaintextScore(text string) float64 {
 	stringVector := make([]float64, len(englishModel))
+	lambda := 0.0
+	plaintextSize := len(text)
 	for i := range text {
 		hex := byte(text[i])
 		if hex >= captialStart && hex <= captialEnd {
-			stringVector[int(hex-captialStart)]++
+			stringVector[int(hex-captialStart)] += 0.99
 		} else if hex >= lowerStart && hex <= lowerEnd {
 			stringVector[int(hex-lowerStart)]++
+		} else if hex == byte(' ') || hex == byte('.') {
+		} else {
+			lambda += float64(plaintextSize)
 		}
 	}
 
-	plaintextSize := len(text)
 	for i := range stringVector {
 		stringVector[i] /= float64(plaintextSize)
 	}
 
-	return pnorm(stringVector, englishModel, .5)
+	return pnorm(stringVector, englishModel, 0.5) + (lambda / float64(plaintextSize))
 }
 
 // Frequency attack against a single charecter XOR.
@@ -110,7 +119,49 @@ func singleByteXOR(hexcipher string) string {
 	return plaintext
 }
 
+func repeatingKeyXOR(plaintext, key string) string {
+	byteStream := []byte(plaintext)
+	cipherStream := make([]byte, len(byteStream))
+	byteKey := []byte(key)
+	keySize := len(byteKey)
+	for i := range byteStream {
+		cipherStream[i] = byteStream[i] ^ byteKey[i%keySize]
+	}
+
+	return hex.EncodeToString(cipherStream)
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func detectSingleKeyXOR() string {
+	file, err := os.Open("4.txt")
+	check(err)
+
+	defer file.Close()
+
+	bestScore := 100.0
+	bestString := ""
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		text := singleByteXOR(scanner.Text())
+		score := plaintextScore(text)
+		if score < bestScore {
+			bestScore = score
+			bestString = text
+		}
+	}
+
+	check(scanner.Err())
+
+	return bestString
+}
+
 func main() {
+
 	// Local Test of S1C1
 	S1C1Input := "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
 	S1C1Answer := "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
@@ -135,4 +186,18 @@ func main() {
 	if S1C3Result != S1C3Answer {
 		fmt.Printf(S1C3Result)
 	}
+
+	S1C5Input := "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
+	S1C5Answer := "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
+	S1C5Result := repeatingKeyXOR(S1C5Input, "ICE")
+	if S1C5Result != S1C5Answer {
+		fmt.Printf(S1C5Result)
+	}
+
+	S1C4Result := detectSingleKeyXOR()
+	S1C4Answer := "Now that the party is jumping\n"
+	if S1C4Result != S1C4Answer {
+		fmt.Printf(S1C4Result)
+	}
+
 }
