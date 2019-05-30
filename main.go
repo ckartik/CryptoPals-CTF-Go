@@ -160,7 +160,72 @@ func detectSingleKeyXOR() string {
 	return bestString
 }
 
+func hammingDistance(str1, str2 string) float64 {
+	if len(str1) != len(str2) {
+		panic("Invalid String Length")
+	}
+	b1 := []byte(str1)
+	b2 := []byte(str2)
+	checks := []byte{
+		byte(1), byte(2),
+		byte(4), byte(8),
+		byte(16), byte(32),
+		byte(64), byte(128),
+	}
+	distance := 0.0
+
+	for i := range b1 {
+		tmp := b1[i] ^ b2[i]
+		for j := range checks {
+			if uint32(tmp&checks[j]) > 0 {
+				distance += 1
+			}
+		}
+	}
+
+	return distance
+}
+
+func breakRepeatingKeyXOR() {
+	file, err := os.Open("6.txt")
+	check(err)
+
+	defer file.Close()
+	cipherChunk := make([]byte, 160)
+	file.Read(cipherChunk)
+
+	bestResult := 5.0
+	bestKey := 3
+
+	for keySize := 2; keySize < 41; keySize++ {
+		distanceMeasure := 0.0
+		base := 0
+		chunk1 := string(cipherChunk[base : base+keySize])
+		base += keySize
+		chunk2 := string(cipherChunk[base : base+keySize])
+		base += keySize
+		chunk3 := string(cipherChunk[base : base+keySize])
+		base += keySize
+		chunk4 := string(cipherChunk[base : base+keySize])
+
+		distanceMeasure += hammingDistance(chunk1, chunk2)
+		distanceMeasure += hammingDistance(chunk1, chunk3)
+		distanceMeasure += hammingDistance(chunk1, chunk4)
+		distanceMeasure += hammingDistance(chunk2, chunk3)
+		distanceMeasure += hammingDistance(chunk2, chunk4)
+		distanceMeasure += hammingDistance(chunk3, chunk4)
+
+		result := float64(distanceMeasure / (float64(keySize) * 6.0))
+		if result < bestResult {
+			bestKey = keySize
+			bestResult = result
+		}
+	}
+	fmt.Println(bestKey)
+}
+
 func main() {
+	breakRepeatingKeyXOR()
 
 	// Local Test of S1C1
 	S1C1Input := "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
@@ -199,5 +264,7 @@ func main() {
 	if S1C4Result != S1C4Answer {
 		fmt.Printf(S1C4Result)
 	}
+
+	fmt.Println(hammingDistance("this is a test", "wokka wokka!!!"))
 
 }
