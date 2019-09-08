@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// TODO: Break up into Returning Keysize function and creating blocks, only pass a slice of the cipher into this and all other funcitions.
 func breakRepeatingKeyXOR() {
 	file, err := os.Open("6.txt")
 	if err != nil {
