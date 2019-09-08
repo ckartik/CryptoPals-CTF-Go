@@ -2,7 +2,8 @@ package main
 
 import (
 	"../../common/hammingdist"
-	"fmt"
+	"log"
+	"math"
 	"os"
 )
 
@@ -13,22 +14,29 @@ func breakRepeatingKeyXOR() {
 	}
 
 	defer file.Close()
-	cipherChunk := make([]byte, 160)
-	file.Read(cipherChunk)
+	cipher := make([]byte, 4000)
+	bytesRead, err := file.Read(cipher)
+	if err != nil {
+		panic(err)
+	} else {
+		log.Printf("Successfully Read in %v bytes", bytesRead)
+	}
 
-	bestResult := 5.0
-	bestKey := 3
+	// Init paramters for discovery.
+	bestResult := math.Inf(1)
+	bestKeySize := 5
 
+	// Discover value for the keysize.
 	for keySize := 2; keySize < 41; keySize++ {
 		distanceMeasure := 0.0
 		base := 0
-		chunk1 := string(cipherChunk[base : base+keySize])
+		chunk1 := string(cipher[base : base+keySize])
 		base += keySize
-		chunk2 := string(cipherChunk[base : base+keySize])
+		chunk2 := string(cipher[base : base+keySize])
 		base += keySize
-		chunk3 := string(cipherChunk[base : base+keySize])
+		chunk3 := string(cipher[base : base+keySize])
 		base += keySize
-		chunk4 := string(cipherChunk[base : base+keySize])
+		chunk4 := string(cipher[base : base+keySize])
 
 		distanceMeasure += hammingdist.CalculateDistance(chunk1, chunk2)
 		distanceMeasure += hammingdist.CalculateDistance(chunk1, chunk3)
@@ -39,11 +47,20 @@ func breakRepeatingKeyXOR() {
 
 		result := float64(distanceMeasure / (float64(keySize) * 6.0))
 		if result < bestResult {
-			bestKey = keySize
+			bestKeySize = keySize
 			bestResult = result
 		}
 	}
-	fmt.Println(bestKey)
+	log.Printf("Found a perdicted keysize of %v", bestKeySize)
+
+	// Break the ciphertext into blocks of keySize length.
+	numOfBlocks := int(math.Ceil(float64(bytesRead) / float64(bestKeySize)))
+	blocks := make([][]byte, numOfBlocks)
+	base := 0
+	for i := 0; base < bytesRead; i++ {
+		blocks[i] = cipher[base : base+bestKeySize]
+		base += bestKeySize
+	}
 }
 
 func main() {
