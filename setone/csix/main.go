@@ -1,7 +1,9 @@
 package main
 
 import (
+	"../../common/attack"
 	"../../common/hammingdist"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"math"
@@ -29,6 +31,7 @@ func breakRepeatingKeyXOR() {
 	bestKeySize := 5
 
 	// Discover value for the keysize.
+	// TODO: Fix this as it's not finding the right key size.
 	for keySize := 2; keySize < 41; keySize++ {
 		distanceMeasure := 0.0
 		base := 0
@@ -77,8 +80,24 @@ func breakRepeatingKeyXOR() {
 		}
 	}
 
-	fmt.Printf("%v", blocksT)
+	key := make([]byte, bestKeySize)
 
+	for j := 0; j < bestKeySize; j++ {
+		_, key[j] = attack.SingleByteXOR(hex.EncodeToString(blocksT[j]))
+	}
+
+	fmt.Println(decryptRepeatingKeyXOR(cipher, key))
+
+}
+
+func decryptRepeatingKeyXOR(byteStream, key []byte) string {
+	cipherStream := make([]byte, len(byteStream))
+	keySize := len(key)
+	for i := range byteStream {
+		cipherStream[i] = byteStream[i] ^ key[i%keySize]
+	}
+
+	return string(cipherStream)
 }
 
 func main() {
