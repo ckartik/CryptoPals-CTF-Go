@@ -2,6 +2,7 @@ package main
 
 import (
 	"../../common/hammingdist"
+	"fmt"
 	"log"
 	"math"
 	"os"
@@ -62,6 +63,22 @@ func breakRepeatingKeyXOR() {
 		blocks[i] = cipher[base : base+bestKeySize]
 		base += bestKeySize
 	}
+
+	// Allocate memory for transposed matrix.
+	blocksT := make([][]byte, bestKeySize)
+	for j := 0; j < bestKeySize; j++ {
+		blocksT[j] = make([]byte, numOfBlocks)
+	}
+
+	// Will retrive keySize chunks.
+	for i, block := range blocks {
+		for j := 0; j < bestKeySize; j++ {
+			blocksT[j][i] = block[j]
+		}
+	}
+
+	fmt.Printf("%v", blocksT)
+
 }
 
 func main() {
