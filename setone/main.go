@@ -227,14 +227,6 @@ func breakRepeatingKeyXOR() {
 func main() {
 	breakRepeatingKeyXOR()
 
-	// Local Test of S1C1
-	S1C1Input := "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
-	S1C1Answer := "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
-	S1C1Result := hexto64(S1C1Input)
-	if S1C1Result != S1C1Answer {
-		fmt.Printf(S1C1Result)
-	}
-
 	// Local Test of S1C2
 	S1C2Input := "1c0111001f010100061a024b53535009181c"
 	S1C2Input2 := "686974207468652062756c6c277320657965"
@@ -250,13 +242,6 @@ func main() {
 	S1C3Result := singleByteXOR(S1C3Input)
 	if S1C3Result != S1C3Answer {
 		fmt.Printf(S1C3Result)
-	}
-
-	S1C5Input := "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
-	S1C5Answer := "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
-	S1C5Result := repeatingKeyXOR(S1C5Input, "ICE")
-	if S1C5Result != S1C5Answer {
-		fmt.Printf(S1C5Result)
 	}
 
 	S1C4Result := detectSingleKeyXOR()

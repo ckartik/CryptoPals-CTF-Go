@@ -1,5 +1,61 @@
 package hammingdist
 
+import "math"
+
+var englishModel = []float64{
+	0.0651738, 0.0124248, 0.0217339, 0.0349835, //'A', 'B', 'C', 'D',...
+	0.1041442, 0.0197881, 0.0158610, 0.0492888,
+	0.0558094, 0.0009033, 0.0050529, 0.0331490,
+	0.0202124, 0.0564513, 0.0596302, 0.0137645,
+	0.0008606, 0.0497563, 0.0515760, 0.0729357,
+	0.0225134, 0.0082903, 0.0171272, 0.0013692,
+	0.0145984, 0.0007836, 0.1918182}
+
+const (
+	captialStart = 0x61
+	captialEnd   = 0x7a
+	lowerStart   = 0x41
+	lowerEnd     = 0x5a
+)
+
+// plaintextscore finds the manhatan distance between text and the english model.
+// Our formula finds the p = 0.5 norm of the difference between the english model and the normailzed count of each letter.
+// It also adds a lambda weight factor to penalize the occurence of non-english output.
+func PlaintextScore(text string) float64 {
+	stringVector := make([]float64, len(englishModel))
+	lambda := 0.0
+	plaintextSize := len(text)
+	for i := range text {
+		hex := byte(text[i])
+		if hex >= captialStart && hex <= captialEnd {
+			stringVector[int(hex-captialStart)] += 0.99
+		} else if hex >= lowerStart && hex <= lowerEnd {
+			stringVector[int(hex-lowerStart)]++
+		} else if hex == byte(' ') || hex == byte('.') {
+		} else {
+			lambda += float64(plaintextSize)
+		}
+	}
+
+	for i := range stringVector {
+		stringVector[i] /= float64(plaintextSize)
+	}
+
+	return pnorm(stringVector, englishModel, 0.5) + (lambda / float64(plaintextSize))
+}
+
+// pnorm find the norm with pvalue p of the difference between vector1 and vector2.
+// p=0.5 is the most effective because similarty on a few features is a strong
+// inidicator of similarty between the enlgish model and the small piece of text.
+func pnorm(vector1, vector2 []float64, p float64) float64 {
+	dist := 0.0
+	for i := range vector1 {
+		dist += math.Pow(math.Abs(vector1[i]-vector2[i]), p)
+	}
+
+	return math.Pow(dist, 1/p)
+}
+
 func CalculateDistance(str1, str2 string) float64 {
 	if len(str1) != len(str2) {
 		panic("Invalid String Length")

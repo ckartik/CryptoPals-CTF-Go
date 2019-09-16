@@ -1,12 +1,10 @@
 package main
 
 import (
-	"./common/hammingdist"
+	"../../common/hammingdist"
 	"bufio"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"math"
 	"os"
 )
 
@@ -38,10 +36,7 @@ func singleByteXOR(hexcipher string) string {
 	return plaintext
 }
 
-func detectSingleKeyXOR(file *File) string {
-	file, err := os.Open("4.txt")
-	check(err)
-
+func detectSingleKeyXOR(file *os.File) string {
 	defer file.Close()
 
 	bestScore := 100.0
@@ -55,25 +50,22 @@ func detectSingleKeyXOR(file *File) string {
 			bestString = text
 		}
 	}
-	check(scanner.Err())
+
+	if scanner.Err() != nil {
+		panic(scanner.Err())
+	}
 
 	return bestString
 }
 
 func main() {
-
-	// Local Test of S1C1
-	S1C3Input := "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
-	S1C3Answer := "Cooking MC's like a pound of bacon"
-	S1C3Result := singleByteXOR(S1C3Input)
-	if S1C3Result != S1C3Answer {
-		fmt.Printf(S1C3Result)
+	file, err := os.Open("4.txt")
+	if err != nil {
+		panic(err)
 	}
-
-	S1C4Result := detectSingleKeyXOR()
+	S1C4Result := detectSingleKeyXOR(file)
 	S1C4Answer := "Now that the party is jumping\n"
 	if S1C4Result != S1C4Answer {
 		fmt.Printf(S1C4Result)
 	}
-
 }
