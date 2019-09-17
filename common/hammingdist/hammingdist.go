@@ -56,6 +56,9 @@ func pnorm(vector1, vector2 []float64, p float64) float64 {
 	return math.Pow(dist, 1/p)
 }
 
+// CalculateDistance will find the hamming distance between two strings.
+// The length of the paramters str1 and str2 should be the same.
+// It will return the hamming distance in 64 byte floating point.
 func CalculateDistance(str1, str2 string) float64 {
 	if len(str1) != len(str2) {
 		panic("Invalid String Length")
@@ -80,4 +83,40 @@ func CalculateDistance(str1, str2 string) float64 {
 	}
 
 	return distance
+}
+
+// GuessKeySize returns a best guess of the keysiz returns a best guess of the keysize
+// TODO: Fix this, it's not providing the correct values.
+func GuessKeySize(cipher []byte) int {
+	// Init paramters for discovery.
+	bestResult := math.Inf(1)
+	bestKeySize := -1
+
+	// Discover value for the keysize.
+	for keySize := 1; keySize < 41; keySize++ {
+		distanceMeasure := 0.0
+		base := keySize
+		chunk1 := string(cipher[base : base+keySize])
+		base += keySize
+		chunk2 := string(cipher[base : base+keySize])
+		base += keySize
+		chunk3 := string(cipher[base : base+keySize])
+		base += keySize
+		chunk4 := string(cipher[base : base+keySize])
+
+		distanceMeasure += CalculateDistance(chunk1, chunk2)
+		distanceMeasure += CalculateDistance(chunk1, chunk3)
+		distanceMeasure += CalculateDistance(chunk1, chunk4)
+		distanceMeasure += CalculateDistance(chunk2, chunk3)
+		distanceMeasure += CalculateDistance(chunk2, chunk4)
+		distanceMeasure += CalculateDistance(chunk3, chunk4)
+
+		result := float64(distanceMeasure / float64(keySize))
+		if result < bestResult {
+			bestKeySize = keySize
+			bestResult = result
+		}
+	}
+
+	return bestKeySize
 }
