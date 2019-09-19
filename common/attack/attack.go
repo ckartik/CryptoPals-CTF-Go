@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 )
 
-// Frequency attack against a single charecter XOR.
+// Frequency attack against a single charecter XOR. Attack works by brute-forcing every key against
+// a similarty measure of charecter frequencies using the hammingdist plaintext score.
+// returns the tuple plaintext, key.
 func SingleByteXOR(hexcipher string) (string, byte) {
 	byteStream, err := hex.DecodeString(hexcipher)
 	if err != nil {
