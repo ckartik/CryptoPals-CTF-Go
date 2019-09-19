@@ -2,13 +2,40 @@ package attack
 
 import (
 	"../../common/hammingdist"
+	"bufio"
 	"encoding/hex"
+	"os"
 )
+
+// Frequency attack against a single charecter XOR over a encrrpted text file.
+//
+// returns the best perdicted plaintext.
+func DetectSingleKeyXOR(file *os.File) string {
+	defer file.Close()
+
+	bestScore := 100.0
+	bestString := ""
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		text, _ := singleByteXOR(scanner.Text())
+		score := hammingdist.PlaintextScore(text)
+		if score < bestScore {
+			bestScore = score
+			bestString = text
+		}
+	}
+
+	if scanner.Err() != nil {
+		panic(scanner.Err())
+	}
+
+	return bestString
+}
 
 // Frequency attack against a single charecter XOR. Attack works by brute-forcing every key against
 // a similarty measure of charecter frequencies using the hammingdist plaintext score.
 // returns the tuple plaintext, key.
-func SingleByteXOR(hexcipher string) (string, byte) {
+func singleByteXOR(hexcipher string) (string, byte) {
 	byteStream, err := hex.DecodeString(hexcipher)
 	if err != nil {
 		panic("There was an issue decoding the string")
