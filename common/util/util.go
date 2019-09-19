@@ -5,6 +5,27 @@ import (
 	"encoding/hex"
 )
 
+// FixedXOR xors the bytes of hstr1 with hstr2, for len(byte(hstr1)).
+//
+// Returns the resulting xor of hstr1 and hstr2 as a string.
+func FixedXOR(hstr1, hstr2 string) string {
+	b1, err := hex.DecodeString(hstr1)
+	if err != nil {
+		panic("There was an issue decoding the string")
+	}
+	b2, err := hex.DecodeString(hstr2)
+	if err != nil {
+		panic("There was an issue decoding the string")
+	}
+
+	XORValue := make([]byte, len(b1))
+	for i := range b1 {
+		XORValue[i] = b1[i] ^ b2[i]
+	}
+
+	return hex.EncodeToString(XORValue)
+}
+
 // Repeatedly xoring the bytestream of key with plaintext.
 //
 // Returns the ciphertext as a string
