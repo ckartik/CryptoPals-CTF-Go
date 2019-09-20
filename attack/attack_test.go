@@ -13,6 +13,6 @@ func TestDetectSingleKeyXOR(t *testing.T) {
 	S1C4Result := DetectSingleKeyXOR(file)
 	S1C4Answer := "Now that the party is jumping\n"
 	if S1C4Result != S1C4Answer {
-		t.Errorf("Error: expected %v, but recieved %v", S1C4ANSWER, S1C4Result)
+		t.Errorf("Error: expected %v, but recieved %v", S1C4Answer, S1C4Result)
 	}
 }

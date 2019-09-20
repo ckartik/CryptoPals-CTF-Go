@@ -1,7 +1,8 @@
 package attack
 
 import (
-	"../hammingdist"
+	"../common/hammingdist"
+	"../common/util"
 	"bufio"
 	"encoding/hex"
 	"fmt"
@@ -58,18 +59,8 @@ func breakRepeatingKeyXOR() {
 		_, key[j] = singleByteXOR(hex.EncodeToString(blocksT[j]))
 	}
 
-	fmt.Println(decryptRepeatingKeyXOR(cipher, key))
+	fmt.Println(util.RepeatingKeyXOR(string(cipher), string(key)))
 
-}
-
-func decryptRepeatingKeyXOR(byteStream, key []byte) string {
-	cipherStream := make([]byte, len(byteStream))
-	keySize := len(key)
-	for i := range byteStream {
-		cipherStream[i] = byteStream[i] ^ key[i%keySize]
-	}
-
-	return string(cipherStream)
 }
 
 // Frequency attack against a single charecter XOR over a encrrpted text file.
