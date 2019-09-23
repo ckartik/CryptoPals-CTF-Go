@@ -1,6 +1,9 @@
 package hammingdist
 
-import "math"
+import (
+	"container/heap"
+	"math"
+)
 
 var englishModel = []float64{
 	0.0651738, 0.0124248, 0.0217339, 0.0349835, //'A', 'B', 'C', 'D',...
@@ -85,13 +88,45 @@ func CalculateDistance(str1, str2 string) float64 {
 	return distance
 }
 
-// GuessKeySize returns a best guess of the keysiz returns a best guess of the keysize
-// TODO: Fix this, it's not providing the correct values.
-func GuessKeySize(cipher []byte) int {
-	// Init paramters for discovery.
-	bestResult := math.Inf(1)
-	bestKeySize := -1
+/********* START OF MIN-HEAP DEFN *************/
+// TODO(@ckartik): Test the min-heap.
+type Guess struct {
+	distanceMeasure float64
+	keysize         int
+}
 
+type GuessMinHeap []Guess
+
+func (h GuessMinHeap) Len() int      { return len(h) }
+func (h GuessMinHeap) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
+
+// We want this to be a min-heap.
+func (h GuessMinHeap) Less(i, j int) bool { return h[i].distanceMeasure < h[j].distanceMeasure }
+
+func (h *GuessMinHeap) Push(x interface{}) {
+	*h = append(*h, x.(Guess))
+}
+
+func (h *GuessMinHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	*h = old[0 : n-1]
+
+	return old[n-1]
+}
+
+/********* END OF MIN-HEAP DEFN *************/
+
+// GuessKeySize returns a best guess of the keysiz returns a best guess of the keysize
+// Try using a min-heap of size 5.
+// TODO: Fix this, it's not providing the correct values.
+func GuessKeySize(cipher []byte) GuessMinHeap {
+	// Init paramters for discovery.
+	h := &GuessMinHeap{{math.Inf(1), 0},
+		{math.Inf(1), 0}, {math.Inf(1), 0},
+		{math.Inf(1), 0}, {math.Inf(1), 0}}
+
+	heap.Init(h)
 	// Discover value for the keysize.
 	for keySize := 1; keySize < 41; keySize++ {
 		distanceMeasure := 0.0
@@ -105,18 +140,17 @@ func GuessKeySize(cipher []byte) int {
 		chunk4 := string(cipher[base : base+keySize])
 
 		distanceMeasure += CalculateDistance(chunk1, chunk2)
-		distanceMeasure += CalculateDistance(chunk1, chunk3)
 		distanceMeasure += CalculateDistance(chunk1, chunk4)
 		distanceMeasure += CalculateDistance(chunk2, chunk3)
 		distanceMeasure += CalculateDistance(chunk2, chunk4)
 		distanceMeasure += CalculateDistance(chunk3, chunk4)
+		distanceMeasure += CalculateDistance(chunk1, chunk3)
 
 		result := float64(distanceMeasure / float64(keySize))
-		if result < bestResult {
-			bestKeySize = keySize
-			bestResult = result
-		}
+		guess := Guess{result, keySize}
+		h.Push(guess)
+		h.Pop()
 	}
 
-	return bestKeySize
+	return *h
 }
