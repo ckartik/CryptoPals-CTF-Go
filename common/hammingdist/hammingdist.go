@@ -92,7 +92,7 @@ func CalculateDistance(str1, str2 string) float64 {
 // TODO(@ckartik): Test the min-heap.
 type Guess struct {
 	distanceMeasure float64
-	keysize         int
+	Keysize         int
 }
 
 type GuessMinHeap []Guess
@@ -110,9 +110,9 @@ func (h *GuessMinHeap) Push(x interface{}) {
 func (h *GuessMinHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
-	*h = old[0 : n-1]
+	*h = old[1:n]
 
-	return old[n-1]
+	return old[0]
 }
 
 /********* END OF MIN-HEAP DEFN *************/
@@ -121,11 +121,7 @@ func (h *GuessMinHeap) Pop() interface{} {
 // Try using a min-heap of size 5.
 // TODO: Fix this, it's not providing the correct values.
 func GuessKeySize(cipher []byte) GuessMinHeap {
-	// Init paramters for discovery.
-	h := &GuessMinHeap{{math.Inf(1), 0},
-		{math.Inf(1), 0}, {math.Inf(1), 0},
-		{math.Inf(1), 0}, {math.Inf(1), 0}}
-
+	h := new(GuessMinHeap)
 	heap.Init(h)
 	// Discover value for the keysize.
 	for keySize := 1; keySize < 41; keySize++ {
@@ -149,7 +145,6 @@ func GuessKeySize(cipher []byte) GuessMinHeap {
 		result := float64(distanceMeasure / float64(keySize))
 		guess := Guess{result, keySize}
 		h.Push(guess)
-		h.Pop()
 	}
 
 	return *h

@@ -1,6 +1,7 @@
 package attack
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -15,4 +16,8 @@ func TestDetectSingleKeyXOR(t *testing.T) {
 	if S1C4Result != S1C4Answer {
 		t.Errorf("Error: expected %v, but recieved %v", S1C4Answer, S1C4Result)
 	}
+}
+
+func TestBreakRepeatingKeyXOR(t *testing.T) {
+	fmt.Println(breakRepeatingKeyXOR())
 }

@@ -5,14 +5,13 @@ import (
 	"../common/util"
 	"bufio"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"math"
 	"os"
 )
 
 // TODO: Break up into Returning Keysize function and creating blocks, only pass a slice of the cipher into this and all other funcitions.
-func breakRepeatingKeyXOR() {
+func breakRepeatingKeyXOR() string {
 	file, err := os.Open("6.txt")
 	if err != nil {
 		panic(err)
@@ -27,40 +26,51 @@ func breakRepeatingKeyXOR() {
 		log.Printf("Successfully Read in %v bytes", bytesRead)
 	}
 
-	bestKeySize := hammingdist.GuessKeySize(cipher[:])
+	guesses := hammingdist.GuessKeySize(cipher[:])
+	bestScore := math.Inf(1)
+	var bestPlaintext string
+	for i := 0; i < 5; i++ {
+		bestKeySize := []hammingdist.Guess(guesses)[i].Keysize
 
-	log.Printf("Found a perdicted keysize of %v", bestKeySize)
+		log.Printf("Found a perdicted keysize of %v", bestKeySize)
 
-	// Break the ciphertext into blocks of keySize length.
-	numOfBlocks := int(math.Ceil(float64(bytesRead) / float64(bestKeySize)))
-	blocks := make([][]byte, numOfBlocks)
-	base := 0
-	for i := 0; base < bytesRead; i++ {
-		blocks[i] = cipher[base : base+bestKeySize]
-		base += bestKeySize
-	}
+		// Break the ciphertext into blocks of keySize length.
+		numOfBlocks := int(math.Ceil(float64(bytesRead) / float64(bestKeySize)))
+		blocks := make([][]byte, numOfBlocks)
+		base := 0
+		for i := 0; base < bytesRead; i++ {
+			blocks[i] = cipher[base : base+bestKeySize]
+			base += bestKeySize
+		}
 
-	// Allocate memory for transposed matrix.
-	blocksT := make([][]byte, bestKeySize)
-	for j := 0; j < bestKeySize; j++ {
-		blocksT[j] = make([]byte, numOfBlocks)
-	}
-
-	// Will retrive keySize chunks.
-	for i, block := range blocks {
+		// Allocate memory for transposed matrix.
+		blocksT := make([][]byte, bestKeySize)
 		for j := 0; j < bestKeySize; j++ {
-			blocksT[j][i] = block[j]
+			blocksT[j] = make([]byte, numOfBlocks)
+		}
+
+		// Will retrive keySize chunks.
+		for i, block := range blocks {
+			for j := 0; j < bestKeySize; j++ {
+				blocksT[j][i] = block[j]
+			}
+		}
+
+		key := make([]byte, bestKeySize)
+
+		for j := 0; j < bestKeySize; j++ {
+			_, key[j] = singleByteXOR(hex.EncodeToString(blocksT[j]))
+		}
+
+		plaintext := util.RepeatingKeyXOR(string(cipher), string(key))
+		score := hammingdist.PlaintextScore(plaintext)
+		if score < bestScore {
+			bestPlaintext = plaintext
+			bestScore = score
 		}
 	}
 
-	key := make([]byte, bestKeySize)
-
-	for j := 0; j < bestKeySize; j++ {
-		_, key[j] = singleByteXOR(hex.EncodeToString(blocksT[j]))
-	}
-
-	fmt.Println(util.RepeatingKeyXOR(string(cipher), string(key)))
-
+	return bestPlaintext
 }
 
 // Frequency attack against a single charecter XOR over a encrrpted text file.
