@@ -25,7 +25,7 @@ func TestGuessKeySize(t *testing.T) {
 	guess := GuessKeySize([]byte(ciphertext))
 
 	// Pops keysize with minimum found edit distance.
-	_ = heap.Pop(&guess)
+	_ = heap.Pop(guess)
 
 	if 5 != len(key) {
 		t.Errorf("Error: expected keysize of %v, but got %v", len(key), guess)

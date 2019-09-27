@@ -121,7 +121,7 @@ func (h *GuessMinHeap) Pop() interface{} {
 // GuessKeySize returns a best guess of the keysiz returns a best guess of the keysize
 // Try using a min-heap of size 5.
 // TODO: Fix this, it's not providing the correct values.
-func GuessKeySize(cipher []byte) GuessMinHeap {
+func GuessKeySize(cipher []byte) *GuessMinHeap {
 	h := new(GuessMinHeap)
 	heap.Init(h)
 	// Discover value for the keysize.
@@ -148,5 +148,5 @@ func GuessKeySize(cipher []byte) GuessMinHeap {
 		heap.Push(h, guess)
 	}
 
-	return *h
+	return h
 }

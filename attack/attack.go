@@ -4,6 +4,7 @@ import (
 	"../common/hammingdist"
 	"../common/util"
 	"bufio"
+	"container/heap"
 	"encoding/hex"
 	"log"
 	"math"
@@ -26,12 +27,16 @@ func breakRepeatingKeyXOR() string {
 		log.Printf("Successfully Read in %v bytes", bytesRead)
 	}
 
-	guesses := hammingdist.GuessKeySize(cipher[:])
 	bestScore := math.Inf(1)
 	var bestPlaintext string
-	for i := 0; i < 5; i++ {
-		bestKeySize := []hammingdist.Guess(guesses)[i].Keysize
 
+	guesses := hammingdist.GuessKeySize(cipher[:])
+
+	for i := 0; i < 5; i++ {
+		guess := heap.Pop(guesses)
+		log.Printf("Retrieved the following from the min-queue: %v", guess)
+
+		bestKeySize := guess.(hammingdist.Guess).Keysize
 		log.Printf("Found a perdicted keysize of %v", bestKeySize)
 
 		// Break the ciphertext into blocks of keySize length.
