@@ -2,7 +2,7 @@ package hammingdist
 
 import (
 	"../util"
-	"fmt"
+	"container/heap"
 	"testing"
 )
 
@@ -23,6 +23,9 @@ func TestGuessKeySize(t *testing.T) {
 	// Test Cipher
 	ciphertext := util.RepeatingKeyXOR(plaintext, key)
 	guess := GuessKeySize([]byte(ciphertext))
+
+	// Pops keysize with minimum found edit distance.
+	_ = heap.Pop(&guess)
 
 	if 5 != len(key) {
 		t.Errorf("Error: expected keysize of %v, but got %v", len(key), guess)

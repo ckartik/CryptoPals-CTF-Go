@@ -110,9 +110,10 @@ func (h *GuessMinHeap) Push(x interface{}) {
 func (h *GuessMinHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
-	*h = old[1:n]
+	x := old[n-1]
+	*h = old[0 : n-1]
 
-	return old[0]
+	return x
 }
 
 /********* END OF MIN-HEAP DEFN *************/
@@ -144,7 +145,7 @@ func GuessKeySize(cipher []byte) GuessMinHeap {
 
 		result := float64(distanceMeasure / float64(keySize))
 		guess := Guess{result, keySize}
-		h.Push(guess)
+		heap.Push(h, guess)
 	}
 
 	return *h
