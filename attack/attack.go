@@ -5,8 +5,9 @@ import (
 	"../common/util"
 	"bufio"
 	"container/heap"
+	b64 "encoding/base64"
 	"encoding/hex"
-	"log"
+	"fmt"
 	"math"
 	"os"
 )
@@ -18,26 +19,27 @@ func breakRepeatingKeyXOR() string {
 		panic(err)
 	}
 
+	reader := b64.NewDecoder(b64.StdEncoding, file)
+
 	defer file.Close()
 	cipher := make([]byte, 4000)
-	bytesRead, err := file.Read(cipher)
+	bytesRead, err := reader.Read(cipher)
 	if err != nil {
 		panic(err)
 	} else {
-		log.Printf("Successfully Read in %v bytes", bytesRead)
+		fmt.Printf("Successfully Read in %v bytes.\n", bytesRead)
 	}
 
 	bestScore := math.Inf(1)
 	var bestPlaintext string
+	var bestKey string
 
 	guesses := hammingdist.GuessKeySize(cipher[:])
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		guess := heap.Pop(guesses)
-		log.Printf("Retrieved the following from the min-queue: %v", guess)
 
 		bestKeySize := guess.(hammingdist.Guess).Keysize
-		log.Printf("Found a perdicted keysize of %v", bestKeySize)
 
 		// Break the ciphertext into blocks of keySize length.
 		numOfBlocks := int(math.Ceil(float64(bytesRead) / float64(bestKeySize)))
@@ -67,13 +69,16 @@ func breakRepeatingKeyXOR() string {
 			_, key[j] = singleByteXOR(hex.EncodeToString(blocksT[j]))
 		}
 
-		plaintext := util.RepeatingKeyXOR(string(cipher), string(key))
+		plaintext := util.DecryptRepeatingKeyXOR(string(cipher), string(key))
 		score := hammingdist.PlaintextScore(plaintext)
 		if score < bestScore {
 			bestPlaintext = plaintext
 			bestScore = score
+			bestKey = string(key)
 		}
 	}
+
+	fmt.Printf("The following is our prediction of the key: %v.\n", string(bestKey))
 
 	return bestPlaintext
 }

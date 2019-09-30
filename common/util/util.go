@@ -41,6 +41,29 @@ func RepeatingKeyXOR(plaintext, key string) string {
 	return hex.EncodeToString(cipherStream)
 }
 
+// Repeatedly xoring the bytestream of key with plaintext.
+//
+// Returns the ciphertext as a string
+func DecryptRepeatingKeyXOR(plaintext, key string) string {
+
+	// Convert Your input text into a sequence of bytes
+	byteStream := []byte(plaintext)
+
+	// Creates space for cipher.
+	cipherStream := make([]byte, len(byteStream))
+
+	// Initialize the key as bytes and coressponding params.
+	byteKey := []byte(key)
+	keySize := len(byteKey)
+
+	// This is like auto in C++.
+	for i := range byteStream {
+		cipherStream[i] = byteStream[i] ^ byteKey[i%keySize]
+	}
+
+	return string(cipherStream)
+}
+
 // Hexto64 re-encodes the passed in hexString as base64.
 //
 // Returns it as a base64 encoding.
