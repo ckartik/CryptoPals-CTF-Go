@@ -1,6 +1,10 @@
 package util
 
-import "testing"
+import (
+	b64 "encoding/base64"
+	"os"
+	"testing"
+)
 
 func TestFixedXOR(t *testing.T) {
 	S1C2Input := "1c0111001f010100061a024b53535009181c"
@@ -27,5 +31,29 @@ func TestRepeatingKeyXOR(t *testing.T) {
 	if S1C5Result != S1C5Answer {
 		t.Errorf("Error: Expected:\n%v, but received:\n%v", S1C5Answer, S1C5Result)
 	}
+
+}
+
+func TestDecryptAES(t *testing.T) {
+	fh, err := os.Open("./7.txt")
+	if err != nil {
+		t.Errorf("Test failed because file could not be opened.\n%v", err)
+	}
+	defer fh.Close()
+
+	stats, err := fh.Stat()
+	if err != nil {
+		t.Errorf("Test failed because file stats could not be opened.\n%v", err)
+	}
+	reader := b64.NewDecoder(b64.StdEncoding, fh)
+
+	size := stats.Size()
+	t.Logf("File has a size of %v bytes.", size)
+
+	cipher := make([]byte, size+400)
+	bytesRead, err := reader.Read(cipher)
+	t.Logf("%v bytes read into buffer after decoding base64.", bytesRead)
+
+	t.Logf("Value returned:\n%v", DecryptAES(cipher, []byte("YELLOW SUBMARINE")))
 
 }

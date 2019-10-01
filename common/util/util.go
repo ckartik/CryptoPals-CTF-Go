@@ -1,9 +1,23 @@
 package util
 
 import (
+	"crypto/aes"
 	"encoding/base64"
 	"encoding/hex"
+	"log"
 )
+
+func DecryptAES(cipher []byte, key []byte) string {
+	cblock, err := aes.NewCipher(key)
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Decrypt here.
+	_ = cblock
+
+	return "Unimplemented"
+}
 
 // FixedXOR xors the bytes of hstr1 with hstr2, for len(byte(hstr1)).
 //
