@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bufio"
 	b64 "encoding/base64"
 	"os"
 	"testing"
@@ -45,15 +46,16 @@ func TestDecryptAES(t *testing.T) {
 	if err != nil {
 		t.Errorf("Test failed because file stats could not be opened.\n%v", err)
 	}
-	reader := b64.NewDecoder(b64.StdEncoding, fh)
+	decoder := b64.NewDecoder(b64.StdEncoding, fh)
+	reader := bufio.NewReader(decoder)
 
 	size := stats.Size()
 	t.Logf("File has a size of %v bytes.", size)
 
-	cipher := make([]byte, size+400)
+	cipher := make([]byte, size)
 	bytesRead, err := reader.Read(cipher)
 	t.Logf("%v bytes read into buffer after decoding base64.", bytesRead)
 
-	t.Logf("Value returned:\n%v", DecryptAES(cipher, []byte("YELLOW SUBMARINE")))
+	t.Logf("Value returned:\n%v", DecryptAES(cipher[:bytesRead], []byte("YELLOW SUBMARINE")))
 
 }

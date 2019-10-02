@@ -13,10 +13,19 @@ func DecryptAES(cipher []byte, key []byte) string {
 		log.Println(err)
 	}
 
-	// Decrypt here.
-	_ = cblock
+	cipherSize := len(cipher)
+	keySize := len(key)
 
-	return "Unimplemented"
+	plaintext := make([]byte, cipherSize)
+
+	var j int
+	for j = 0; j < cipherSize-keySize; j += keySize {
+		cblock.Decrypt(plaintext[j:], cipher[j:])
+	}
+
+	//	cblock.Decrypt(plaintext[j:], cipher[j:])
+
+	return string(plaintext)
 }
 
 // FixedXOR xors the bytes of hstr1 with hstr2, for len(byte(hstr1)).
