@@ -18,12 +18,11 @@ func DecryptAES(cipher []byte, key []byte) string {
 
 	plaintext := make([]byte, cipherSize)
 
+	// TODO: Read only multiple of keysize and throw error if filesize is corrupted and not a multiple.
 	var j int
-	for j = 0; j < cipherSize-keySize; j += keySize {
+	for j = 0; j < cipherSize; j += keySize {
 		cblock.Decrypt(plaintext[j:], cipher[j:])
 	}
-
-	//	cblock.Decrypt(plaintext[j:], cipher[j:])
 
 	return string(plaintext)
 }

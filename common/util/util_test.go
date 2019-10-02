@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	b64 "encoding/base64"
+	"io"
 	"os"
 	"testing"
 )
@@ -35,6 +36,7 @@ func TestRepeatingKeyXOR(t *testing.T) {
 
 }
 
+// TODO: Unable to decode full-file into buffer.
 func TestDecryptAES(t *testing.T) {
 	fh, err := os.Open("./7.txt")
 	if err != nil {
@@ -48,12 +50,11 @@ func TestDecryptAES(t *testing.T) {
 	}
 	decoder := b64.NewDecoder(b64.StdEncoding, fh)
 	reader := bufio.NewReader(decoder)
-
 	size := stats.Size()
 	t.Logf("File has a size of %v bytes.", size)
 
 	cipher := make([]byte, size)
-	bytesRead, err := reader.Read(cipher)
+	bytesRead, err := io.ReadFull(reader, cipher)
 	t.Logf("%v bytes read into buffer after decoding base64.", bytesRead)
 
 	t.Logf("Value returned:\n%v", DecryptAES(cipher[:bytesRead], []byte("YELLOW SUBMARINE")))
