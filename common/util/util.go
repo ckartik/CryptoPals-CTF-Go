@@ -7,6 +7,13 @@ import (
 	"log"
 )
 
+// DecryptAES takes in a byte-array of cipher and a key and decryptes it.
+//
+// Does not currently through an error but should.
+//
+// TODO: Design question - change cipher byte-array to io.Reader and return an io.reader as well.
+//	 since I handle breaking up the cipher bytes array into seperate blocks and I don't need to
+//	 parralize the decrypt operations.
 func DecryptAES(cipher []byte, key []byte) string {
 	cblock, err := aes.NewCipher(key)
 	if err != nil {
