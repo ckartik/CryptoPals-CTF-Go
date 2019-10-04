@@ -139,3 +139,7 @@ func singleByteXOR(hexcipher string) (string, byte) {
 
 	return plaintext, key
 }
+
+func detectAESECB(file os.File) {
+
+}
