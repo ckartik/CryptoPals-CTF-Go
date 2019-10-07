@@ -7,6 +7,20 @@ import (
 	"log"
 )
 
+func DetectAES(ciphers <-chan []byte) chan struct{} {
+	done := make(chan struct{}, 3)
+	go func(ciphers <-chan []byte, done chan struct{}) {
+		for cipher := range ciphers {
+			// Detect AES
+			_ = cipher
+		}
+
+		done <- struct{}{}
+	}(ciphers, done)
+
+	return done
+}
+
 // DecryptAES takes in a byte-array of cipher and a key and decryptes it.
 //
 // Does not currently through an error but should.

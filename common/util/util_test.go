@@ -1,7 +1,9 @@
 package util
 
 import (
+	"bufio"
 	b64 "encoding/base64"
+	"encoding/hex"
 	"io"
 	"os"
 	"testing"
@@ -57,4 +59,30 @@ func TestDecryptAES(t *testing.T) {
 
 	t.Logf("Value returned:\n%v", DecryptAES(cipher[:bytesRead], []byte("YELLOW SUBMARINE")))
 
+}
+
+func TestDetectAES(t *testing.T) {
+	fh, err := os.Open("./8.txt")
+	if err != nil {
+		t.Errorf("Test failed because file could not be opened.\n%v", err)
+	}
+	defer fh.Close()
+
+	reader := hex.NewDecoder(fh)
+	lineReader := bufio.NewReader(reader)
+
+	ciphers := make(chan []byte)
+
+	line, isPrefix, err := lineReader.ReadLine()
+	if isPrefix {
+		t.Errorf("We don't handle such long lines of ciphertext.")
+	}
+
+	detected := DetectAES(ciphers)
+	for err != nil {
+		ciphers <- line
+		line, _, err = lineReader.ReadLine()
+	}
+	close(ciphers)
+	<-detected
 }
