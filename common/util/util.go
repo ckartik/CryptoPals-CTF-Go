@@ -7,15 +7,40 @@ import (
 	"log"
 )
 
-func DetectAES(ciphers <-chan []byte) chan struct{} {
-	done := make(chan struct{}, 3)
-	go func(ciphers <-chan []byte, done chan struct{}) {
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Takes in hex-encoded ciphers.
+func DetectAES(ciphers <-chan []byte) chan string {
+	done := make(chan string, 1)
+
+	go func(ciphers <-chan []byte, done chan string) {
 		for cipher := range ciphers {
-			// Detect AES
-			_ = cipher
+			decoded := make([]byte, len(cipher)/2)
+			hmap := make(map[string]bool)
+			n, err := hex.Decode(decoded, cipher)
+			check(err)
+
+			log.Printf("Decoded %v bytes.", n)
+
+			for index := 0; index <= n-16; index += 16 {
+				word := string(cipher[index : index+16])
+
+				if hmap[word] {
+					done <- string(cipher)
+
+					return
+				}
+
+				hmap[word] = true
+			}
+
 		}
 
-		done <- struct{}{}
+		done <- ""
 	}(ciphers, done)
 
 	return done

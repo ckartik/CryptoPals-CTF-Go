@@ -3,7 +3,6 @@ package util
 import (
 	"bufio"
 	b64 "encoding/base64"
-	"encoding/hex"
 	"io"
 	"os"
 	"testing"
@@ -63,26 +62,23 @@ func TestDecryptAES(t *testing.T) {
 
 func TestDetectAES(t *testing.T) {
 	fh, err := os.Open("./8.txt")
+	defer fh.Close()
 	if err != nil {
 		t.Errorf("Test failed because file could not be opened.\n%v", err)
 	}
-	defer fh.Close()
 
-	reader := hex.NewDecoder(fh)
-	lineReader := bufio.NewReader(reader)
-
-	ciphers := make(chan []byte)
-
-	line, isPrefix, err := lineReader.ReadLine()
-	if isPrefix {
-		t.Errorf("We don't handle such long lines of ciphertext.")
-	}
-
+	// TODO: Fix this to use different conncurrent architecture, this will cause a deadlock if the buffer is not large enough.
+	ciphers := make(chan []byte, 300)
 	detected := DetectAES(ciphers)
-	for err != nil {
-		ciphers <- line
-		line, _, err = lineReader.ReadLine()
+
+	scanner := bufio.NewScanner(fh)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		ciphers <- []byte(scanner.Text())
 	}
+
 	close(ciphers)
-	<-detected
+	stringFound := <-detected
+	t.Log(stringFound)
 }
