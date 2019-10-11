@@ -24,8 +24,6 @@ func DetectAES(ciphers <-chan []byte) chan string {
 			n, err := hex.Decode(decoded, cipher)
 			check(err)
 
-			log.Printf("Decoded %v bytes.", n)
-
 			for index := 0; index <= n-16; index += 16 {
 				word := string(cipher[index : index+16])
 
@@ -142,4 +140,22 @@ func HexTo64(hexString string) string {
 	}
 
 	return base64.StdEncoding.EncodeToString(binaryData)
+}
+
+const BlockSize8 int = 8
+const BlockSize16 int = 16
+
+// TODO: Support only certain encodings.
+// TODO: Add encoding detection and fail if not correctly encoded.
+func PKCS7(plaintext []byte, blockSize int) []byte {
+	originalSize := len(plaintext)
+	paddingSize := blockSize - (originalSize % blockSize)
+
+	padding := make([]byte, paddingSize)
+
+	for i := range padding {
+		padding[i] = byte(4)
+	}
+
+	return append(plaintext[:], padding[:]...)
 }

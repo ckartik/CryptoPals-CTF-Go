@@ -60,6 +60,45 @@ func TestDecryptAES(t *testing.T) {
 
 }
 
+func TestPKCS7(t *testing.T) {
+	testStr1 := "Hello World"
+	testStr2 := "Hello WorldWorld"
+	testStr3 := "Hello WorldWorldWorld"
+	testStr4 := "Hello WorldWorldWorldWorld"
+
+	if len(PKCS7([]byte(testStr1), BlockSize16))%BlockSize16 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+
+	if len(PKCS7([]byte(testStr2), BlockSize16))%BlockSize16 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+
+	if len(PKCS7([]byte(testStr3), BlockSize16))%BlockSize16 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+
+	if len(PKCS7([]byte(testStr4), BlockSize16))%BlockSize16 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+	if len(PKCS7([]byte(testStr1), BlockSize16))%BlockSize16 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+
+	if len(PKCS7([]byte(testStr2), BlockSize8))%BlockSize8 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+
+	if len(PKCS7([]byte(testStr3), BlockSize8))%BlockSize8 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+
+	if len(PKCS7([]byte(testStr4), BlockSize8))%BlockSize8 != 0 {
+		t.Error("Padding was not sucessful")
+	}
+
+}
+
 func TestDetectAES(t *testing.T) {
 	fh, err := os.Open("./8.txt")
 	defer fh.Close()
